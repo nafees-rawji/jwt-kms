@@ -17,9 +17,9 @@ npm install jwt-kms
 ## Usage
 
 ```js
-const JWTKMS = require("jwt-kms");
+const Jwtkms = require("jwt-kms");
 
-var jwtkms = new JWTKMS({
+var jwtkms = new Jwtkms({
     aws: {
         region: "us-east-1",
         accessKeyId : process.env.AWS_ACCESS_KEY,	// Optional if set in environment
