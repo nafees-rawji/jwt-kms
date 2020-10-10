@@ -1,44 +1,30 @@
 import {KMS} from "aws-sdk";
 import base64url from "base64url";
-
-
-type JWTKMSConfig = {
-    aws?: {
-        region?: string,
-        accessKeyId?: string, // Optional if set in environment
-        secretAccessKey?: string // Optional if set in environment
-    }
-}
+import {JWTKMSConfig} from "./definitions/config";
+import {JWTComponents} from "./definitions/components";
 
 class JWTKMS
 {
     private kms: KMS;
+    private readonly keyArn: string;
 
-    constructor(options?: JWTKMSConfig)
+    constructor(options: JWTKMSConfig)
     {
-        if(!options)
-        {
-            options = {
-                aws: {
-                    region: "us-east-1"
-                }
-            };
-        }
-
-        this.kms = new KMS(options.aws);
+        this.keyArn = options?.keyArn
+        this.kms = new KMS(options?.aws);
     }
 
-    sign(payload: Record<string, any>, options: {issued_at?: Date, expires?: Date, keyArn: string}): Promise<string>
+    sign(payload: Record<string, any>, options?: {issued_at?: Date, expires?: Date}): Promise<string>
     {
-        if(!options.keyArn) throw Error("Key ARN is required");
+        if(!this.keyArn) throw Error("Key ARN is required");
 
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const headers = {
                 alg: "KMS",
                 typ: "JWT"
             };
 
-            if(options.issued_at)
+            if(options?.issued_at)
             {
                 payload.iat = Math.ceil( options.issued_at.getTime() / 1000 );
             }
@@ -47,7 +33,7 @@ class JWTKMS
                 payload.iat = Math.floor( Date.now() / 1000 );
             }
 
-            if(options.expires)
+            if(options?.expires)
             {
                 payload.exp = Math.ceil( options.expires.getTime() / 1000 );
             }
@@ -59,8 +45,8 @@ class JWTKMS
             };
 
             const data = await this.kms.encrypt({
-                Plaintext: new Buffer(base64url(tokenComponents.header + "." + tokenComponents.payload), "base64"),
-                KeyId: options.keyArn
+                Plaintext: Buffer.from(base64url(tokenComponents.header + "." + tokenComponents.payload), "base64"),
+                KeyId: this.keyArn
             }).promise()
 
             tokenComponents.signature = data.CiphertextBlob!.toString("base64");
@@ -70,13 +56,13 @@ class JWTKMS
         });
     }
 
-    validate(token: string) {
+    private static validate(token: string): JWTComponents {
         if(!token || !token.split) throw Error("Invalid token");
 
         const tokenComponents = token.split(".");
 
         if (tokenComponents.length !== 3) throw Error("Invalid token");
-        const components = {
+        const components: JWTComponents = {
             header: JSON.parse(base64url.decode(tokenComponents[0])),
             payload:  JSON.parse(base64url.decode(tokenComponents[1])),
             encrypted: {
@@ -105,11 +91,11 @@ class JWTKMS
 
 
 
-    verify(token: string)
+    verify(token: string): Promise<Record<string, any>>
     {
         return new Promise(async (resolve, reject) => {
-            const components = this.validate(token);
-            const data = await this.kms.decrypt({CiphertextBlob: new Buffer(components.encrypted.signature, "base64")}).promise();
+            const components = JWTKMS.validate(token);
+            const data = await this.kms.decrypt({CiphertextBlob: Buffer.from(components.encrypted.signature, "base64")}).promise();
             const decryptedSignature = base64url.decode(data.Plaintext!.toString("base64"));
             if (decryptedSignature === components.encrypted.header + "." + components.encrypted.payload) return resolve(components.payload);
             return reject("Signature wasn't valid");

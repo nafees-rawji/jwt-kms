@@ -5,6 +5,7 @@ Sign and validate JWT tokens using keys stored in the AWS Key Management Service
 Feature Todo List:
 - <strike>Symmetric encryption (both parties have IAM access to KMS key)</strike>
 - Asymmetic encryption (only 1 party has IAM access to KMS key)
+- Unit Tests
 
 ## Requirements
 - node.js 6+
