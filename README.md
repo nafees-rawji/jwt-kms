@@ -11,7 +11,7 @@ Feature Todo List:
 
 ## Installation
 ```sh
-npm install jwt-kms
+npm install jwt-kms-typescript
 ```
 
 ## Usage
