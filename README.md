@@ -42,6 +42,6 @@ jwtkms.verify(token).then(function(decoded): Record<string, any>
 ```
 
 ## Credit 
-- Created by [Nafees Rawji] (https://nafeesrawji.com)
+- Created by [Nafees Rawji](https://nafeesrawji.com)
 - Inspired by [Jonathan Keebler](http://www.keebler.net)
 - Inspired by [kms-jwt](https://github.com/bombbomb/kms-jwt)
