@@ -18,5 +18,10 @@
   "dependencies": {
     "aws-sdk": "^2.264.1",
     "base64url": "^3.0.0"
-  }
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/nafees-rawji/jwt-kms.git"
+  },
+  "license": "MIT"
 }
